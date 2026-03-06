@@ -1,0 +1,61 @@
+﻿@using FrontApplication.Core.Enums
+@using FrontApplication.Models
+
+<EditForm Model="Product" OnValidSubmit="Submit">
+
+
+        <MudTextField Label="Name"
+                      @bind-Value="Product.Name"
+                      Required="true" />
+
+        <MudTextField Label="Description"
+                      @bind-Value="Product.Description"
+                      Required="true" />
+
+        <MudSelect T="ProductCategory"
+                   Label="Category"
+                    @bind-Value="Product.Category">
+            @foreach (var category in Enum.GetValues<ProductCategory>())
+            {
+                <MudSelectItem Value="@category">
+                    @category.ToString()
+                </MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudNumericField Label="Price"
+                         Format="C2"
+                         @bind-Value="Product.Price"
+                         T="decimal"
+                         Required="true" />
+
+        <MudNumericField Label="Stock"
+                         @bind-Value="Product.Stock"
+                         Required="true" />
+
+        <MudButton ButtonType="ButtonType.Submit"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Class="mt-4">
+            Save
+        </MudButton>
+
+
+</EditForm>
+
+@code {
+
+    [Parameter]
+    public Product Product { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<Product> OnValidSubmit { get; set; }
+
+    private MudForm? _form;
+
+    private async Task Submit()
+    {
+        await OnValidSubmit.InvokeAsync(Product);
+    }
+
+}

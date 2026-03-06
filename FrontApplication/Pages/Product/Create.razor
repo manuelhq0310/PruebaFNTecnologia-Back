@@ -1,0 +1,29 @@
+﻿@page "/products/create"
+@using FrontApplication.Core
+@using FrontApplication.Pages.Product.Components
+@using FrontApplication.Services
+@using FrontApplication.Models
+@using Microsoft.AspNetCore.Authorization
+@inject ProductService ProductService
+@inject NavigationManager Navigation
+@attribute [Authorize(Roles = Roles.Admin)]
+
+<MudContainer>
+
+    <MudText Typo="Typo.h4">
+        Create Product
+    </MudText>
+
+    <ProductForm OnValidSubmit="CreateProduct"/>
+
+</MudContainer>
+
+@code {
+
+    async Task CreateProduct(Product product)
+    {
+        await ProductService.CreateProduct(product);
+        Navigation.NavigateTo("/products");
+    }
+
+}
