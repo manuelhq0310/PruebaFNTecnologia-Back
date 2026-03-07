@@ -1,0 +1,136 @@
+﻿@page "/products"
+@using FrontApplication.Core
+@using FrontApplication.Pages.Product.Components
+@using FrontApplication.Services
+@using Microsoft.AspNetCore.Authorization
+@using FrontApplication.Models
+@using Microsoft.AspNetCore.Components.Authorization
+@inject ProductService ProductService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthProvider
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@attribute [Authorize]
+
+<MudContainer>
+
+    <MudText Typo="Typo.h4" Class="mb-4">
+        Products
+    </MudText>
+
+    <AuthorizeView Roles="@Roles.Admin">
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="@CreateProduct"
+                   Class="mb-4">
+            New Product
+        </MudButton>
+</AuthorizeView>
+
+    <MudTable Items="_products" Hover="true" Striped="true">
+
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Description</MudTh>
+            <MudTh>Price</MudTh>
+            <MudTh>Stock</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+
+            <MudTd>@context.Name</MudTd>
+            <MudTd>@context.Description</MudTd>
+            <MudTd>@context.Price</MudTd>
+            <MudTd>@context.Stock</MudTd>
+
+            <MudTd>
+                <MudButton Size="Size.Small"
+                           Color="Color.Primary"
+                           OnClick="@(()=>EditProduct(context.Id))">
+                    Edit
+                </MudButton>
+
+                <MudButton Size="Size.Small"
+                           Color="Color.Error"
+                           OnClick="@(()=>DeleteProduct(context.Id))">
+                    Delete
+                </MudButton>
+            </MudTd>
+
+        </RowTemplate>
+
+    </MudTable>
+
+</MudContainer>
+
+@code {
+    private List<Product> _products = new();
+    bool isAdmin = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        isAdmin = user.IsInRole(Roles.Admin);
+
+        _products = await ProductService.GetProducts();
+    }
+
+    void CreateProduct()
+    {
+        if (!ValidateRole())
+            return;
+
+        Navigation.NavigateTo("/products/create");
+    }
+
+    void EditProduct(Guid id)
+    {
+        if (!ValidateRole())
+            return;
+
+        Navigation.NavigateTo($"/products/edit/{id}");
+    }
+
+    async Task DeleteProduct(Guid id)
+    {
+        if (!ValidateRole())
+            return;
+
+        var parameters = new DialogParameters
+        {
+            { "ContentText", "Are you sure you want to delete this product?" },
+            { "ButtonText", "Delete" },
+            { "Color", Color.Error }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            await ProductService.DeleteProduct(id);
+            _products = await ProductService.GetProducts();
+            Snackbar.Add("Product deleted successfully", Severity.Success);
+        }
+    }
+
+    private bool ValidateRole()
+    {
+        if (!isAdmin)
+        {
+            Snackbar.Add("This feature is not allowed", Severity.Error);
+            return false;
+        }
+        return true;
+    }
+}

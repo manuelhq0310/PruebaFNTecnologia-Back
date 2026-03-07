@@ -1,0 +1,76 @@
+﻿@page "/"
+@using Blazored.LocalStorage
+@using FrontApplication.Models
+@using FrontApplication.Services
+@inject UserService AuthService
+@inject NavigationManager Navigation
+@inject ILocalStorageService LocalStorage
+@inject JwtAuthenticationStateProvider AuthProvider
+
+<MudPaper Class="pa-6 mx-auto" MaxWidth="400px">
+
+    <MudText Typo="Typo.h5" Class="mb-4">Login</MudText>
+
+    <MudTextField Label="Email"
+                  @bind-Value="login.Email"
+                  Required="true" />
+
+    <MudTextField Label="Password"
+                  InputType="InputType.Password"
+                  @bind-Value="login.Password"
+                  Required="true" />
+
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               OnClick="HandleLogin"
+               Class="mt-4">
+        Login
+    </MudButton>
+
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <MudAlert Severity="Severity.Error" Class="mt-3">
+            @error
+        </MudAlert>
+    }
+
+</MudPaper>
+
+@code {
+
+    private LoginRequest login = new();
+    private string error = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity != null && user.Identity.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/products", true);
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        var result = await AuthService.Login(login);
+
+        if (!result!.Success)
+        {
+            error = result.Message;
+            return;
+        }
+
+        var token = result?.Data?.Token;
+
+        if (string.IsNullOrEmpty(token))
+            return;
+
+        await LocalStorage.SetItemAsync("jwt", token);
+        await AuthProvider.NotifyUserAuthentication(token);
+
+        Navigation.NavigateTo("/products");
+    }
+
+}
