@@ -37,4 +37,11 @@ public class UserService
     {
         return await _localStorage.GetItemAsync<string>("jwt");
     }
+
+    public async Task<bool> Register(RegisterRequest request)
+    {
+        var response = await _http.PostAsJsonAsync(ApiEndpoints.UserRegister, request);
+
+        return response.IsSuccessStatusCode;
+    }
 }

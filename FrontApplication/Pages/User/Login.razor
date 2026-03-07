@@ -27,6 +27,13 @@
         Login
     </MudButton>
 
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Secondary"
+               OnClick="GoToRegister"
+               Class="mt-4">
+        Register
+    </MudButton>
+
     @if (!string.IsNullOrEmpty(error))
     {
         <MudAlert Severity="Severity.Error" Class="mt-3">
@@ -73,4 +80,8 @@
         Navigation.NavigateTo("/products");
     }
 
+    void GoToRegister()
+    {
+        Navigation.NavigateTo("/register");
+    }
 }

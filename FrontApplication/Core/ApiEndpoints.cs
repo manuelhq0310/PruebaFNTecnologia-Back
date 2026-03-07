@@ -12,6 +12,7 @@
         public const string ProductUpdate = "Product/Update?id={0}";
         public const string ProductDelete = "Product/Delete?id={0}";
         public const string UserLogin = "User/Login";
+        public const string UserRegister = "User/Register";
     }
 
     public static class Roles
